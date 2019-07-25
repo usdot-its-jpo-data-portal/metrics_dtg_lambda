@@ -1,9 +1,10 @@
-Setup Instructions.
+## Setup Instructions
 
 Prerequisites:
-	- CD to root of repo
-	- Python 3.6
+- CD to root of repo
+- Python 3.6
 
+Deployment:
 - Create a virtualenv at the root of the repo with this command:
 `virtualenv -p python3 ./.venv_metrics_lambda_dtg`
 
@@ -13,9 +14,9 @@ Prerequisites:
 - Install all pip dependencies to the package folder with this command:
 `pip install -r package/requirements.txt -t ./package`
 
-Deployment Instructions.
-- CD into package folder
+- CD into package folder: `cd package`
+
 - Zip package folder using this command:
 `zip -r ../lambdapackage.zip ./*`
 
-Upload package to lambda using AWS CLI or web console
+- Upload package to lambda using AWS CLI or web console
