@@ -32,8 +32,8 @@ def get_credentials():
 def unix_time_millis(dt):
     return int(datetime.datetime.timestamp(dt)*1000)
 
-def getAPIMetrics(dataset_id):
-    url = "https://data.transportation.gov/api/views/" + dataset_id + "/metrics.json?" + "start=" + str(unix_time_millis(start_date)) + "&end=" + str(unix_time_millis(end_date)) + "&method=series&slice=MONTHLY"
+def getAPIMetrics(domain, dataset_id):
+    url = "https://"+domain+"/api/views/" + dataset_id + "/metrics.json?" + "start=" + str(unix_time_millis(start_date)) + "&end=" + str(unix_time_millis(end_date)) + "&method=series&slice=MONTHLY"
     r = requests.get(url,auth=HTTPBasicAuth(os.environ["socrata_username"], os.environ["socrata_password"]))
     r = r.json()
     rows_accessed_api = 0
@@ -47,11 +47,18 @@ def getAPIMetrics(dataset_id):
         pass
     return rows_accessed_api, rows_loaded_api
 
+def getJPODatasets(domain):
+    url = "https://api.us.socrata.com/api/catalog/v1?provenance=official&domains="+domain+"&tags=its+joint+program+office+(jpo)&search_context="+domain
+    r = requests.get(url, auth=HTTPBasicAuth(os.environ["socrata_username"], os.environ["socrata_password"]))
+    r = r.json()
+    return r
+
 def lambda_handler(event, context):
 
     try:
-        r = requests.get("https://api.us.socrata.com/api/catalog/v1?domains=data.transportation.gov&tags=its+joint+program+office+(jpo)&search_context=data.transportation.gov", auth=HTTPBasicAuth(os.environ["socrata_username"], os.environ["socrata_password"]))
-        r = r.json()
+        r1 = getJPODatasets('data.transportation.gov')
+        r2 = getJPODatasets('datahub.transportation.gov')
+        results = r1['results'] + r2['results']
 
         # value_range_body = {'values':[]}
         #Add parameters to connect to specific Postgres database
@@ -59,14 +66,14 @@ def lambda_handler(event, context):
         conn = psycopg2.connect(os.environ['pg_connection_string'])
         cur = conn.cursor()
         cur.execute("SET TIME ZONE 'UTC'")
-        for dataset in r['results']:
+        for dataset in results:
             dataset_name = dataset['resource']['name']
             views_by_month = dataset['resource']['page_views']['page_views_last_month']
             overall_views = dataset['resource']['page_views']['page_views_total']
             downloads = dataset['resource']['download_count']
             if downloads is None:
                 downloads = 0
-            try:    
+            try:
                 cur.execute("SELECT downloads FROM ipdh_metrics.dtg_metrics WHERE datetime = %s and dataset_name = %s",(start_date,dataset_name))
                 previous_total = cur.fetchone()[0]
             except:
@@ -74,7 +81,7 @@ def lambda_handler(event, context):
             monthly_downloads = downloads - previous_total
             if monthly_downloads < 0:
                 monthly_downloads = 0
-            api_access, api_downloads = getAPIMetrics(dataset["resource"]["id"])
+            api_access, api_downloads = getAPIMetrics(dataset['metadata']['domain'], dataset["resource"]["id"])
             cur.execute("INSERT INTO ipdh_metrics.dtg_metrics VALUES (%s,%s,%s,%s,%s,%s,%s)",(dataset_name,views_by_month,monthly_downloads,api_access,api_downloads,downloads,end_date))
             value_range_body['values'].append([dataset_name,views_by_month,monthly_downloads,api_access,api_downloads,overall_views,downloads])
         cur.execute("SELECT count(dataset_name) FROM ipdh_metrics.dtg_metrics WHERE datetime = %s",[end_date])
