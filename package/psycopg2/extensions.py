@@ -108,7 +108,7 @@ def register_adapter(typ, callable):
 
 
 # The SQL_IN class is the official adapter for tuples starting from 2.0.6.
-class SQL_IN(object):
+class sql_in(object):
     """Adapt any iterable to an SQL quotable object."""
     def __init__(self, seq):
         self._seq = seq
@@ -140,6 +140,7 @@ class NoneAdapter(object):
     """
     def __init__(self, obj):
         pass
+    #
 
     def getquoted(self, _null=b"NULL"):
         return _null

@@ -152,9 +152,7 @@ class Range(object):
         for attr in ('_lower', '_upper', '_bounds'):
             self_value = getattr(self, attr)
             other_value = getattr(other, attr)
-            if self_value == other_value:
-                pass
-            elif self_value is None:
+            if self_value is None:
                 return True
             elif other_value is None:
                 return False
@@ -378,10 +376,10 @@ where typname = %s and ns.nspname = %s;
             raise ProgrammingError(
                 "PostgreSQL type '%s' not found" % name)
 
-        type, subtype, array = rec
+        rng_type, subtype, array = rec
 
         return RangeCaster(name, pyrange,
-            oid=type, subtype_oid=subtype, array_oid=array)
+            oid=rng_type, subtype_oid=subtype, array_oid=array)
 
     _re_range = re.compile(r"""
         ( \(|\[ )                   # lower bound flag

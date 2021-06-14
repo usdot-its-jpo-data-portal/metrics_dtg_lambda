@@ -2,7 +2,7 @@ import boto3
 import yaml
 from botocore.exceptions import ClientError
 
-def sendEmail(scriptName, e):
+def send_email(script_name, e):
 
     try:
         with open("config.yml", 'r') as stream:
@@ -26,7 +26,7 @@ def sendEmail(scriptName, e):
                 },
                 'Subject': {
                     'Charset': "UTF-8",
-                    'Data': "Metrics Server: An error occurred while executing the " + scriptName + " metrics script.",
+                    'Data': "Metrics Server: An error occurred while executing the " + script_name + " metrics script.",
                 },
             },
             Source=config["reporting_sender"]

@@ -603,7 +603,7 @@ class ReplicationCursor(_replicationCursor):
 
 # a dbtype and adapter for Python UUID type
 
-class UUID_adapter(object):
+class uuid_adapter(object):
     """Adapt Python's uuid.UUID__ type to PostgreSQL's uuid__.
 
     .. __: http://docs.python.org/library/uuid.html
@@ -651,7 +651,7 @@ def register_uuid(oids=None, conn_or_curs=None):
 
     _ext.register_type(_ext.UUID, conn_or_curs)
     _ext.register_type(_ext.UUIDARRAY, conn_or_curs)
-    _ext.register_adapter(uuid.UUID, UUID_adapter)
+    _ext.register_adapter(uuid.UUID, uuid_adapter)
 
     return _ext.UUID
 
